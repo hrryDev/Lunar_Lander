@@ -62,6 +62,8 @@ int mksocket(struct addrinfo *results)
         close(sockfd);
     }
 
+    fprintf(stderr, "Flags: %i | Family: %i | Socktype: %i | Protocol: %i", record->ai_flags, record->ai_family, record->ai_socktype, record->ai_protocol);
+
     if (record == NULL) {
         perror("Failed to create or connect client socket.");
         exit(EXIT_FAILURE);

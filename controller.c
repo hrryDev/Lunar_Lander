@@ -317,10 +317,11 @@ void *dashboard(void *data)
     while (true) {
         // TODO: Task XXX, construct buffer array with the sprintf methond with the following format 
         // "fuel:%f\naltitude:%f\n", landercond.fuel, landercond.altitude
-        
+        sprintf(buffer, "Fuel: %f\nAltitude: %f\n", landercond.fuel, landercond.altitude);        
 
 
         // TODO: Task XXX, send the buffer to the dashboard by using sendto method
+        sendto(d, buffer, strlen(buffer), 0, daddr->ai_addr, daddr->ai_addrlen);
 		
 		usleep(500000);
 	}
@@ -374,15 +375,14 @@ int main(int argc, char *argv[])
 
 
     if ((e = pthread_create(&kscan, NULL, keyboard, NULL)))
-        fprintf(stderr, "not cheated keybord thread: %s\n", strerror(e));
+        fprintf(stderr, "not created keybord thread: %s\n", strerror(e));
 
     if ((e = pthread_create(&lndr, NULL, lander, argv[1])))
         fprintf(stderr, "not created lander thread: %s\n", strerror(e));
 
     //TODO: Task XXX create one thread for dashboard with the function pthread_create
-    /*
     if ((e = pthread_create(&dash, NULL, dashboard, argv[2])))
-       fprintf(stderr, "Not created dashboard thread: %s\n", strerror(e)); */
+       fprintf(stderr, "Not created dashboard thread: %s\n", strerror(e));
 
     pthread_join(dsply, NULL);
 }
