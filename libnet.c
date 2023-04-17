@@ -19,7 +19,7 @@
 #include <arpa/inet.h>
 
 int getaddr(const char *node, const char *service,
-            struct addrinfo **address)
+            struct addrinfo **results)
 {
     struct addrinfo hints = {
         .ai_flags = 0,
@@ -35,24 +35,41 @@ int getaddr(const char *node, const char *service,
         hints.ai_flags = AI_PASSIVE;
 
     // TODO: Task XXX, hint: use getaddrinfo to check if address is available or not
-    err = getaddrinfo(node, service, &hints, address);
-
-    if (err) {
-        fprintf(stderr, "Error tying to open %s:%s\n    %s\n", node, service, gai_strerror(err));
-        return false;
-    }
+    err = getaddrinfo(node, service, &hints, results);
+    
+    if (err) { return false; }
 
     return true;
 }
 
-int mksocket(const struct addrinfo *hints)
+int mksocket(struct addrinfo *results)
 {
+    /* Based on code from Endian Tribe on GitHub https://github.com/EndianTribe/Network-Socket-in-C/blob/master/client.c */
+
     // TODO: Task XXX, hint:  creates an endpoint for communication using the socket function
-    int sockfd = socket(hints->ai_family, hints->ai_socktype, hints->ai_flags);
-    if (sockfd == -1) {
-        /* Error handling */
-        fprintf(stderr, "Could not create socket!");
+    struct addrinfo *record;
+    int sockfd = 0;
+
+    // Loop through the linked-list provided by getaddrinfo() lookup...
+    for (record = results; record != NULL; record = record->ai_next) {
+        sockfd = socket(record->ai_family, record->ai_socktype, record->ai_protocol);
+
+        // If socket() returns -1, failed to create socket. Move on to next record.
+        if (sockfd == -1) continue;
+        if (connect(sockfd, record->ai_addr, record->ai_addrlen) != -1) break;
+        
+        // If connect() returns -1, connection has failed. CLose the socket.
+        close(sockfd);
     }
+
+    if (record == NULL) {
+        perror("Failed to create or connect client socket.");
+        exit(EXIT_FAILURE);
+    }
+
+    // Avoid memory leak
+    freeaddrinfo(results);
+    fprintf(stderr, "Client socket created and connected\n");
 
     return sockfd;
 }

@@ -247,11 +247,16 @@ void *lander(void *data)
     const char stateq[] = "state:?\n";
 
     //TODO: fix the getaddr and mksocket methods in libnet.c and
-    // use them get the address and open the socket
-    if (!getaddr("127.0.1.1", (char *) data, &landr))
-        fprintf(stderr, "can't get lander address");;
-    l = mksocket();
-    printf("%d", l);
+    // use them to get the address and open the socket
+    fprintf(stderr, "Checking address...");
+    if (!getaddr("127.0.1.1", (char *) data, &landr)) {
+        fprintf(stderr, "ERROR: Can't get lander address!\n");
+        exit(EXIT_FAILURE);
+    }
+    fprintf(stderr, " Done!\n");
+
+    l = mksocket(landr);
+
     while (true) {
 		int m;
         usleep(50000);          /* 20Hz = 0.05s = 50ms = 50000us */
@@ -272,8 +277,6 @@ void *lander(void *data)
 
         m = recvfrom(l, msgbuf, msgsize, 0, NULL, NULL);
 		msgbuf[m] = '\0';
-
-        /* parse state */
 		parsestate(msgbuf);
 
 
@@ -289,8 +292,6 @@ void *lander(void *data)
         m = recvfrom(l, msgbuf, msgsize, 0, NULL, NULL);
 		msgbuf[m] = '\0';
 
-       //  datalogging(msgbuff);
-
 
 		usleep(100000);
     }
@@ -300,26 +301,26 @@ void *lander(void *data)
 
 /* Dashboard Communications.
 	Formats and sends data messages to the dashboard.
+    Data is port number
 */
 void *dashboard(void *data)
 {
-   	size_t bufsize = 1024;
-	char buffer[bufsize];
+   	size_t buffsize = 1024;
+	char buffer[buffsize];
 	int d;
 	struct addrinfo *daddr;
 
 	if( !getaddr("127.0.1.1", (char*)data, &daddr))
 		fprintf(stderr,"cant get dash address");
-	d = mksocket();
+	d = mksocket(daddr);
 
     while (true) {
         // TODO: Task XXX, construct buffer array with the sprintf methond with the following format 
         // "fuel:%f\naltitude:%f\n", landercond.fuel, landercond.altitude
-        sprintf(buffer, "fuel:%f\naltitude:%f\n", landercond.fuel, landercond.altitude);
+        
 
 
         // TODO: Task XXX, send the buffer to the dashboard by using sendto method
-        sendto(d, buffer, strlen(buffer), 0, daddr->ai_addr, daddr->ai_addrlen);
 		
 		usleep(500000);
 	}
@@ -337,9 +338,7 @@ void *datalogging(void *data)
 {
 
 	while(true) {
-       // 1. Open/create log file
-       // 2. Append data to file
-       // 3. Close log file
+
 	}
 }
 
@@ -370,28 +369,20 @@ int main(int argc, char *argv[])
 
     /* Start Threads .... */
 
-    printf("Creating display thread...\n");
     if ((e = pthread_create(&dsply, NULL, display, NULL)))
         fprintf(stderr, "not created display thread: %s\n", strerror(e));
-    printf("Success!!\n\n");
 
-    printf("Creating keyboard thread...\n");
+
     if ((e = pthread_create(&kscan, NULL, keyboard, NULL)))
         fprintf(stderr, "not cheated keybord thread: %s\n", strerror(e));
-    printf("Success!!\n\n");
 
-    printf("Creating lander thread...\n");
     if ((e = pthread_create(&lndr, NULL, lander, argv[1])))
         fprintf(stderr, "not created lander thread: %s\n", strerror(e));
-    printf("Success!!\n\n");
 
     //TODO: Task XXX create one thread for dashboard with the function pthread_create
-    
     /*
-    printf("Creating dashboard thread...\n");
-    if ((e = pthread_create(&dash, NULL, dashboard, NULL)))
-        fprintf(stderr, "not created dashboard thread: %s\n", strerror(e));
-    printf("Success!!\n\n"); */
+    if ((e = pthread_create(&dash, NULL, dashboard, argv[2])))
+       fprintf(stderr, "Not created dashboard thread: %s\n", strerror(e)); */
 
     pthread_join(dsply, NULL);
 }

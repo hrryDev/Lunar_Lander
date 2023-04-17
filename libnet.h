@@ -5,7 +5,7 @@
  */
 int getaddr(const char *node, const char *service, struct addrinfo **address);
 
-int mksocket(void);
+int mksocket(const struct addrinfo *results);
 
 int bindsocket(int sfd, const struct sockaddr *addr, socklen_t addrlen);
 
