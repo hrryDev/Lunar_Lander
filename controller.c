@@ -310,18 +310,26 @@ void *dashboard(void *data)
 	int d;
 	struct addrinfo *daddr;
 
-	if( !getaddr("127.0.1.1", (char*)data, &daddr))
-		fprintf(stderr,"cant get dash address");
+    fprintf(stderr, "Checking dashboard address...");
+	if( !getaddr("127.0.1.1", (char*)data, &daddr)) {
+		fprintf(stderr,"ERROR: Can't get dashboard address!\n");
+        exit(EXIT_FAILURE);
+    } else {
+        fprintf(stderr, " Done!\n");
+    }
+
 	d = mksocket(daddr);
 
     while (true) {
-        // TODO: Task XXX, construct buffer array with the sprintf methond with the following format 
+        // TODO: Task XXX, construct buffer array with the sprintf method with the following format 
         // "fuel:%f\naltitude:%f\n", landercond.fuel, landercond.altitude
-        sprintf(buffer, "Fuel: %f\nAltitude: %f\n", landercond.fuel, landercond.altitude);        
-
+        sprintf(buffer, "fuel: %f\naltitude: %f\n", landercond.fuel, landercond.altitude);        
+        fprintf(stderr, "\nDashboard socket information ====\n  Address Length: %i\n", daddr->ai_addrlen);
+        fprintf(stderr, "\nBuffer ====\n%s", buffer);
 
         // TODO: Task XXX, send the buffer to the dashboard by using sendto method
         sendto(d, buffer, strlen(buffer), 0, daddr->ai_addr, daddr->ai_addrlen);
+
 		
 		usleep(500000);
 	}
