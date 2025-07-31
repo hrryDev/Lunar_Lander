@@ -1,5 +1,4 @@
 # LanderController
- Skeleton code for KV5002
  (1) use make all to compile 
  ```
  $ make all
